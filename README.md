@@ -5,4 +5,4 @@
  - Elasticsearch Beat  configurations ( as DaemonSets ) are not included and can be discussed separetely.
  - This cluster is tested on a AWS Kubernetes cluster , which is set up with kops :
  
-kops create cluster <<cluster name>>  --node-count 5 --node-size t2.medium --master-count 1 --master-size t2.micro --zones eu-central-1c --topology public --    networking kube-router  --state <s3 bucket>
+kops create cluster cluster_name --node-count 5 --node-size t2.medium --master-count 1 --master-size t2.micro --zones eu-central-1c --topology public --    networking kube-router  --state s3_bucket
