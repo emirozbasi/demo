@@ -9,5 +9,6 @@ kops create cluster cluster_name --node-count 5 --node-size t2.medium --master-c
 
  - once cluster is up and running below labels and taints applied to to 3 dedicated nodes in the cluster;
  
- k taint node node-name elasticsearch=true:NoExecute
- k label node  node-name node-role.kubernetes.io/elasticsearch=cluster
+ kubectl taint node node-name elasticsearch=true:NoExecute
+ 
+ kubectl label node  node-name node-role.kubernetes.io/elasticsearch=cluster
