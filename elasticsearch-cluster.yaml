@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: es-cluster
+  namespace: monitoring
+  labels:
+    app: elasticsearch
+spec:
+  serviceName: elasticsearch
+  replicas: 3
+  selector:
+    matchLabels:
+      app: elasticsearch
+  template:
+    metadata:
+      labels:
+        app: elasticsearch
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - elasticsearch
+            topologyKey: kubernetes.io/hostname
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: "node-role.kubernetes.io/elasticsearch"
+                operator: In
+                values:
+                - cluster
+      tolerations:
+      - key: "elasticsearch"
+        operator: "Equal"
+        value: "true"
+        effect: "NoExecute"
+      containers:
+      - name: elasticsearch
+        image: docker.elastic.co/elasticsearch/elasticsearch:7.9.0
+        resources:
+            limits:
+              cpu: 1000m
+              memory: 2Gi
+            requests:
+              cpu: 1000m
+              memory: 2Gi
+        ports:
+        - containerPort: 9200
+          name: rest
+          protocol: TCP
+        - containerPort: 9300
+          name: inter-node
+          protocol: TCP
+        env:
+          - name: cluster.name
+            value: elasticsearch-cluster
+          - name: node.name
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: discovery.seed_hosts
+            value: "es-cluster-0.elasticsearch.monitoring.svc.cluster.local,es-cluster-1.elasticsearch.monitoring.svc.cluster.local,es-cluster-2.elasticsearch.monitoring.svc.cluster.local"
+          - name: cluster.initial_master_nodes
+            value: "es-cluster-0,es-cluster-1,es-cluster-2"
+          - name: node.master
+            value: "true"
+          - name: node.data
+            value: "true"
+          - name: ES_JAVA_OPTS
+            value: "-Xms512m -Xmx512m"
+      initContainers:      
+      - name: increase-vm-max-map
+        image: busybox
+        command: ["sysctl", "-w", "vm.max_map_count=262144"]
+        securityContext:
+          privileged: true
